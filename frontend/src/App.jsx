@@ -9,9 +9,28 @@ import AuthPage from './pages/AuthPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
 import AdminDashboard from './pages/AdminDashboard';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('home');
+  // Initialize state from URL on mount
+  const getInitialState = () => {
+    const hash = window.location.hash;
+    if (hash.includes('/verify-email/')) {
+      const token = hash.split('/verify-email/')[1];
+      return {
+        page: 'verify',
+        token: token || null
+      };
+    }
+    return {
+      page: 'home',
+      token: null
+    };
+  };
+
+  const initialState = getInitialState();
+  const [currentPage, setCurrentPage] = useState(initialState.page);
+  const [verificationToken] = useState(initialState.token);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -29,6 +48,8 @@ const App = () => {
         return <AuthPage onNavigate={setCurrentPage} />;
       case 'admin':
         return <AdminDashboard />;
+      case 'verify':
+        return <VerifyEmailPage token={verificationToken} onNavigate={setCurrentPage} />;
       default:
         return <HomePage onNavigate={setCurrentPage} />;
     }
@@ -45,6 +66,7 @@ const App = () => {
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="text-center text-white/70">
               <p>&copy; 2026 Shop Hub. All rights reserved.</p>
+              <p className="mt-2">Built with React, Tailwind CSS, Node.js & MongoDB</p>
             </div>
           </div>
         </footer>

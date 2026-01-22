@@ -10,7 +10,9 @@ const generateToken = (id) => {
   });
 };
 
-// Register user
+// @desc    Register user
+// @route   POST /api/auth/register
+// @access  Public
 exports.register = async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -59,7 +61,9 @@ exports.register = async (req, res) => {
   }
 };
 
-// Verify email
+// @desc    Verify email
+// @route   GET /api/auth/verify/:token
+// @access  Public
 exports.verifyEmail = async (req, res) => {
   try {
     const hashedToken = crypto
@@ -73,7 +77,10 @@ exports.verifyEmail = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired verification token' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid or expired verification token' 
+      });
     }
 
     user.isVerified = true;
@@ -84,6 +91,7 @@ exports.verifyEmail = async (req, res) => {
     const token = generateToken(user._id);
 
     res.json({
+      success: true,
       message: 'Email verified successfully',
       token,
       user: {
@@ -95,11 +103,16 @@ exports.verifyEmail = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 
-// Login user
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -135,7 +148,9 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get current user profile
+// @desc    Get current user
+// @route   GET /api/auth/me
+// @access  Private
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate('cart.product wishlist');
@@ -145,7 +160,9 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Update user profile
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
 exports.updateProfile = async (req, res) => {
   try {
     const { name, phone, address } = req.body;
