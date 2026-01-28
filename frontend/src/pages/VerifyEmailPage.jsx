@@ -5,28 +5,31 @@ import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 
 const VerifyEmailPage = ({ token, onNavigate }) => {
-  const { login, showNotification } = useApp();
+  const { showNotification } = useApp();
   const [status, setStatus] = useState('loading'); // loading, success, error
   const [message, setMessage] = useState('');
+  const verificationStarted = React.useRef(false);
 
   useEffect(() => {
     const verifyEmail = async () => {
+      if (verificationStarted.current) return;
+      verificationStarted.current = true;
+      
       try {
         const res = await fetch(`http://localhost:5000/api/auth/verify/${token}`);
         const data = await res.json();
 
         if (res.ok && data.success) {
           setStatus('success');
-          setMessage(data.message);
+          setMessage('Email verified successfully! You can now log in to your account.');
           
-          // Auto-login the user
-          if (data.token && data.user) {
-            login(data.user, data.token);
-            showNotification('Email verified successfully! You are now logged in.', 'success');
-            
-            // Redirect to home after 2 seconds
-            setTimeout(() => onNavigate('home'), 2000);
-          }
+          showNotification('Verification successful! Please log in.', 'success');
+          
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            window.history.pushState({}, '', '/'); // Clear the URL
+            onNavigate('login');
+          }, 3000);
         } else {
           setStatus('error');
           setMessage(data.message || 'Verification failed');
@@ -60,7 +63,12 @@ const VerifyEmailPage = ({ token, onNavigate }) => {
             <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-white mb-2">Email Verified!</h2>
             <p className="text-white/70 mb-6">{message}</p>
-            <p className="text-white/60 text-sm">Redirecting you to homepage...</p>
+            <div className="space-y-3">
+              <Button onClick={() => onNavigate('login')} className="w-full">
+                Login Now
+              </Button>
+            </div>
+            <p className="text-white/40 text-xs mt-6 italic">Redirecting you in a few seconds...</p>
           </>
         )}
 

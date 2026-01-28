@@ -165,13 +165,16 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, phone, address } = req.body;
+    const { name, phone, address, gender, dob, secondaryEmail } = req.body;
     
     const user = await User.findById(req.user.id);
     
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (address) user.address = address;
+    if (gender) user.gender = gender;
+    if (dob) user.dob = dob;
+    if (secondaryEmail) user.secondaryEmail = secondaryEmail;
     
     await user.save();
     
@@ -182,7 +185,11 @@ exports.updateProfile = async (req, res) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        address: user.address
+        address: user.address,
+        gender: user.gender,
+        dob: user.dob,
+        secondaryEmail: user.secondaryEmail,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {

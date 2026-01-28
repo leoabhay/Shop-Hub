@@ -39,6 +39,19 @@ const userSchema = new mongoose.Schema({
     zipCode: String,
     country: { type: String, default: 'Nepal' }
   },
+  gender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other', 'Not Specified'],
+    default: 'Not Specified'
+  },
+  dob: {
+    type: Date
+  },
+  secondaryEmail: {
+    type: String,
+    lowercase: true,
+    trim: true
+  },
   role: {
     type: String,
     enum: ['user', 'admin'],

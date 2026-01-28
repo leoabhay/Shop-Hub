@@ -71,7 +71,19 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ message: 'Please upload at least one product image' });
     }
 
-    const images = req.files.map(file => `/uploads/products/${file.filename}`);
+    const images = req.files.map(file => {
+      const filePath = path.join(__dirname, '..', 'uploads', 'products', file.filename);
+      const bitmap = fs.readFileSync(filePath);
+      const extension = path.extname(file.filename).slice(1);
+      const base64 = `data:image/${extension};base64,${bitmap.toString('base64')}`;
+      
+      // Cleanup: delete the file from disk after conversion to base64
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      
+      return base64;
+    });
 
     const product = await Product.create({
       name,
@@ -116,13 +128,21 @@ exports.updateProduct = async (req, res) => {
     if (featured !== undefined) product.featured = featured === 'true';
 
     if (req.files && req.files.length > 0) {
-      product.images.forEach(img => {
-        const imgPath = path.join(__dirname, '..', img);
-        if (fs.existsSync(imgPath)) {
-          fs.unlinkSync(imgPath);
+      // If we are still storing locally, we would delete them. 
+      // Since we are moving to base64, the old ones (if they were paths) should be handled.
+      product.images = req.files.map(file => {
+        const filePath = path.join(__dirname, '..', 'uploads', 'products', file.filename);
+        const bitmap = fs.readFileSync(filePath);
+        const extension = path.extname(file.filename).slice(1);
+        const base64 = `data:image/${extension};base64,${bitmap.toString('base64')}`;
+        
+        // Cleanup
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
         }
+        
+        return base64;
       });
-      product.images = req.files.map(file => `/uploads/products/${file.filename}`);
     }
 
     await product.save();
@@ -145,10 +165,13 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    // If images were paths, delete them. If they are base64, nothing to delete on disk.
     product.images.forEach(img => {
-      const imgPath = path.join(__dirname, '..', img);
-      if (fs.existsSync(imgPath)) {
-        fs.unlinkSync(imgPath);
+      if (!img.startsWith('data:')) {
+        const imgPath = path.join(__dirname, '..', img);
+        if (fs.existsSync(imgPath)) {
+          fs.unlinkSync(imgPath);
+        }
       }
     });
 

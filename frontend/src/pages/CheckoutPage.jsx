@@ -4,14 +4,26 @@ import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 
 const CheckoutPage = ({ onNavigate }) => {
-  const { cart, user, showNotification } = useApp();
+  const { cart, user, showNotification, setCart } = useApp();
   const [shippingData, setShippingData] = useState({
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    phone: ''
+    street: user?.address?.street || '',
+    city: user?.address?.city || '',
+    state: user?.address?.state || '',
+    zipCode: user?.address?.zipCode || '',
+    phone: user?.phone || ''
   });
+
+  React.useEffect(() => {
+    if (user) {
+      setShippingData({
+        street: user.address?.street || '',
+        city: user.address?.city || '',
+        state: user.address?.state || '',
+        zipCode: user.address?.zipCode || '',
+        phone: user.phone || ''
+      });
+    }
+  }, [user]);
   const [paymentMethod, setPaymentMethod] = useState('Khalti');
 
   const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
@@ -28,34 +40,151 @@ const CheckoutPage = ({ onNavigate }) => {
       return;
     }
 
-    showNotification('Order placed successfully!', 'success');
-    setTimeout(() => onNavigate('orders'), 2000);
+    try {
+      const token = localStorage.getItem('token');
+      const orderData = {
+        orderItems: cart.map(item => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          image: item.product.images[0],
+          price: item.product.price,
+          product: item.product._id
+        })),
+        shippingAddress: {
+          street: shippingData.street,
+          city: shippingData.city,
+          state: shippingData.state,
+          zipCode: shippingData.zipCode,
+          phone: shippingData.phone
+        },
+        paymentMethod: paymentMethod,
+        itemsPrice: subtotal,
+        taxPrice: tax,
+        shippingPrice: shipping,
+        totalPrice: total
+      };
+
+      const res = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showNotification('Order placed successfully!', 'success');
+        setCart([]);
+        setTimeout(() => onNavigate('orders'), 2000);
+      } else {
+        showNotification(data.message || 'Failed to place order', 'error');
+      }
+    } catch (error) {
+       console.error('Error placing order:', error);
+       showNotification('An error occurred. Please try again.', 'error');
+    }
   };
 
-  const handleKhaltiPayment = () => {
-    // Khalti payment integration placeholder
-    const config = {
-      publicKey: import.meta.env.VITE_KHALTI_PUBLIC_KEY,
-      productIdentity: 'order_' + Date.now(),
-      productName: 'Shop Hub Order',
-      productUrl: window.location.href,
-      eventHandler: {
-        onSuccess(payload) {
-          console.log('Payment successful:', payload);
-          showNotification('Payment successful!', 'success');
+  const verifyPayment = async (orderId, token, amount) => {
+    try {
+      const authToken = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/orders/${orderId}/pay/khalti`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
         },
-        onError(error) {
-          console.error('Payment error:', error);
-          showNotification('Payment failed. Please try again.', 'error');
+        body: JSON.stringify({ token, amount })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showNotification('Payment verified and order placed!', 'success');
+        setCart([]);
+        setTimeout(() => onNavigate('orders'), 2000);
+      } else {
+        showNotification(data.message || 'Payment verification failed', 'error');
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      showNotification('Error verifying payment', 'error');
+    }
+  };
+
+  const handleKhaltiPayment = async () => {
+    if (!shippingData.street || !shippingData.city || !shippingData.phone) {
+      showNotification('Please fill in all shipping details', 'error');
+      return;
+    }
+
+    try {
+      const authToken = localStorage.getItem('token');
+      const orderData = {
+        orderItems: cart.map(item => ({
+          name: item.product.name,
+          quantity: item.quantity,
+          image: item.product.images[0],
+          price: item.product.price,
+          product: item.product._id
+        })),
+        shippingAddress: {
+          street: shippingData.street,
+          city: shippingData.city,
+          state: shippingData.state,
+          zipCode: shippingData.zipCode,
+          phone: shippingData.phone
         },
-        onClose() {
-          console.log('Payment widget closed');
-        }
-      },
-      paymentPreference: ['KHALTI'],
-    };
-    
-    showNotification('Opening Khalti payment gateway...', 'info');
+        paymentMethod: 'Khalti',
+        itemsPrice: subtotal,
+        taxPrice: tax,
+        shippingPrice: shipping,
+        totalPrice: total
+      };
+
+      const res = await fetch('http://localhost:5000/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showNotification(data.message || 'Failed to initialize order', 'error');
+        return;
+      }
+
+      const orderId = data._id;
+
+      const config = {
+        publicKey: 'test_public_key_0275cc5e2bae42fb890536aae01e9e73',
+        productIdentity: orderId,
+        productName: 'Shop Hub Order',
+        productUrl: window.location.origin,
+        eventHandler: {
+          onSuccess(payload) {
+            verifyPayment(orderId, payload.token, payload.amount);
+          },
+          onError(error) {
+            console.error('Khalti error:', error);
+            showNotification('Khalti payment failed', 'error');
+          },
+          onClose() {
+            console.log('Khalti widget closed');
+          }
+        },
+        paymentPreference: ['KHALTI', 'EBANKING', 'MOBILE_BANKING', 'CONNECT_IPS', 'SCT'],
+      };
+
+      const checkout = new window.KhaltiCheckout(config);
+      checkout.show({ amount: Math.round(total * 100) });
+    } catch (error) {
+      console.error('Order creation error:', error);
+      showNotification('Failed to start payment process', 'error');
+    }
   };
 
   return (

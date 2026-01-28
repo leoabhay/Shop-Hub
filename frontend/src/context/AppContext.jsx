@@ -14,6 +14,8 @@ export const AppProvider = ({ children }) => {
   const [wishlist, setWishlist] = useState([]);
   const [products, setProducts] = useState([]);
   const [notification, setNotification] = useState(null);
+  const [currentPage, setCurrentPage] = useState('home');
+  const [viewingItemId, setViewingItemId] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -43,9 +45,12 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const loadProducts = async () => {
+  const loadProducts = async (keyword = '') => {
     try {
-      const res = await fetch('http://localhost:5000/api/products');
+      const url = keyword 
+        ? `http://localhost:5000/api/products?keyword=${encodeURIComponent(keyword)}`
+        : 'http://localhost:5000/api/products';
+      const res = await fetch(url);
       const data = await res.json();
       setProducts(data.products || []);
     } catch (error) {
@@ -69,6 +74,11 @@ export const AppProvider = ({ children }) => {
   };
 
   const addToCart = (product) => {
+    if (!user) {
+      setCurrentPage('login');
+      showNotification('Please login to add items to cart', 'error');
+      return;
+    }
     const existing = cart.find(item => item.product._id === product._id);
     if (existing) {
       setCart(cart.map(item => 
@@ -97,11 +107,49 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const token = localStorage.getItem('token');
+      const { name, phone, street, city, state, zipCode, country, gender, dob, secondaryEmail } = profileData;
+      const formattedData = {
+        name,
+        phone,
+        gender,
+        dob,
+        secondaryEmail,
+        address: { street, city, state, zipCode, country }
+      };
+
+      const res = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(formattedData)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return true;
+      } else {
+        showNotification(data.message || 'Error updating profile', 'error');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showNotification('Error updating profile', 'error');
+      return false;
+    }
+  };
+
   return (
     <AppContext.Provider value={{
-      user, cart, wishlist, products, notification,
+      user, cart, wishlist, products, notification, currentPage,
       login, logout, addToCart, removeFromCart, updateCartQuantity,
-      showNotification, loadProducts
+      showNotification, loadProducts, setCurrentPage, updateProfile,
+      viewingItemId, setViewingItemId, setCart
     }}>
       {children}
     </AppContext.Provider>

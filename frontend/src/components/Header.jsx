@@ -5,11 +5,17 @@ import GlassCard from './GlassCard';
 import Button from './Button';
 
 const Header = ({ onNavigate, currentPage }) => {
-  const { user, cart, logout } = useApp();
+  const { user, cart, logout, loadProducts, setCurrentPage } = useApp();
   const [showMenu, setShowMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    loadProducts(searchQuery);
+    setCurrentPage('products');
+  };
 
   return (
     <header className="backdrop-blur-md bg-white/10 border-b border-white/20 sticky top-0 z-40">
@@ -22,7 +28,7 @@ const Header = ({ onNavigate, currentPage }) => {
             >
               Shop Hub
             </h1>
-            <div className="hidden md:flex items-center gap-4 bg-white/10 rounded-full px-4 py-2 border border-white/20">
+            <form onSubmit={handleSearch} className="hidden md:flex items-center gap-4 bg-white/10 rounded-full px-4 py-2 border border-white/20">
               <Search className="w-5 h-5 text-white/70" />
               <input
                 type="text"
@@ -31,7 +37,7 @@ const Header = ({ onNavigate, currentPage }) => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent border-none outline-none text-white placeholder-white/50 w-64"
               />
-            </div>
+            </form>
           </div>
 
           <nav className="hidden md:flex items-center gap-6">
@@ -68,14 +74,16 @@ const Header = ({ onNavigate, currentPage }) => {
           </nav>
 
           <div className="flex items-center gap-4">
-            <button onClick={() => onNavigate('cart')} className="relative text-white hover:scale-110 transition-transform">
-              <ShoppingCart className="w-6 h-6" />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+            {user && (
+              <button onClick={() => onNavigate('cart')} className="relative text-white hover:scale-110 transition-transform">
+                <ShoppingCart className="w-6 h-6" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {user ? (
               <div className="relative">

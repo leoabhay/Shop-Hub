@@ -5,8 +5,13 @@ import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 
 const ProductsPage = () => {
-  const { products, addToCart } = useApp();
+  const { products, addToCart, setCurrentPage, setViewingItemId } = useApp();
   const [filter, setFilter] = useState('all');
+
+  const handleViewDetails = (id) => {
+    setViewingItemId(id);
+    setCurrentPage('product-details');
+  };
 
   const filteredProducts = filter === 'all' 
     ? products 
@@ -35,8 +40,20 @@ const ProductsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {filteredProducts.map(product => (
           <GlassCard key={product._id} hover className="p-4">
-            <div className="aspect-square bg-white/5 rounded-xl mb-4 flex items-center justify-center">
-              <Package className="w-16 h-16 text-white/30" />
+            <div className="aspect-square bg-white/5 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
+              {product.images && product.images[0] ? (
+                <img 
+                  src={product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5000${product.images[0]}`} 
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23ddd" width="64" height="64"/%3E%3C/svg%3E';
+                  }}
+                />
+              ) : (
+                <Package className="w-16 h-16 text-white/30" />
+              )}
             </div>
             <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{product.name}</h3>
             <p className="text-white/70 text-sm mb-3 line-clamp-2">{product.description}</p>
@@ -48,9 +65,14 @@ const ProductsPage = () => {
               </div>
             </div>
             <span className="text-xs text-white/60 mb-3 block">Stock: {product.stock}</span>
-            <Button onClick={() => addToCart(product)} className="w-full py-2 text-sm">
-              Add to Cart
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={() => addToCart(product)} className="py-2 text-xs">
+                Add to Cart
+              </Button>
+              <Button variant="secondary" onClick={() => handleViewDetails(product._id)} className="py-2 text-xs">
+                Details
+              </Button>
+            </div>
           </GlassCard>
         ))}
       </div>

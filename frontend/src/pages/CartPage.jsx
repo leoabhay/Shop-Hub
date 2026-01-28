@@ -36,8 +36,20 @@ const CartPage = ({ onNavigate }) => {
           {cart.map(item => (
             <GlassCard key={item.product._id} className="p-6">
               <div className="flex gap-6">
-                <div className="w-24 h-24 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Package className="w-12 h-12 text-white/30" />
+                <div className="w-24 h-24 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {item.product.images && item.product.images[0] ? (
+                    <img 
+                      src={item.product.images[0].startsWith('data:') ? item.product.images[0] : `http://localhost:5000${item.product.images[0]}`} 
+                      alt={item.product.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="64" height="64"%3E%3Crect fill="%23ddd" width="64" height="64"/%3E%3C/svg%3E';
+                      }}
+                    />
+                  ) : (
+                    <Package className="w-12 h-12 text-white/30" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-2">{item.product.name}</h3>
