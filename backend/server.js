@@ -4,9 +4,6 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
 
-// Connect to database
-connectDB();
-
 const app = express();
 
 // Middleware
@@ -42,10 +39,15 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 5000;
+// Connect to database
+connectDB();
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+// Only start server if not in Vercel serverless environment
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  });
+}
 
 module.exports = app;
