@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Star } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 
 const ProductsPage = () => {
-  const { products, addToCart, setCurrentPage, setViewingItemId } = useApp();
-  const [filter, setFilter] = useState('all');
+  const { products, addToCart, setCurrentPage, setViewingItemId, selectedCategory, setSelectedCategory, filterByCategory } = useApp();
+  const [filter, setFilter] = useState(selectedCategory);
+
+  useEffect(() => {
+    setFilter(selectedCategory);
+  }, [selectedCategory]);
 
   const handleViewDetails = (id) => {
     setViewingItemId(id);
@@ -25,7 +29,7 @@ const ProductsPage = () => {
         {['all', 'Electronics', 'Clothing', 'Books', 'Home & Garden'].map(cat => (
           <button
             key={cat}
-            onClick={() => setFilter(cat)}
+            onClick={() => filterByCategory(cat)}
             className={`px-6 py-2 rounded-full transition-all whitespace-nowrap ${
               filter === cat
                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
@@ -43,7 +47,7 @@ const ProductsPage = () => {
             <div className="aspect-square bg-white/5 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
               {product.images && product.images[0] ? (
                 <img 
-                  src={product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5000${product.images[0]}`} 
+                  src={product.images[0].startsWith('data:') ? product.images[0] : `${import.meta.env.VITE_SERVER_URL}${product.images[0]}`} 
                   alt={product.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {

@@ -5,10 +5,13 @@ import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 
 const ProductDetailsPage = ({ productId, onBack }) => {
-  const { products, addToCart, showNotification } = useApp();
+  const { products, addToCart, showNotification, user, loadProducts } = useApp();
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [loadingReview, setLoadingReview] = useState(false);
 
   useEffect(() => {
     const found = products.find(p => p._id === productId);
@@ -16,6 +19,42 @@ const ProductDetailsPage = ({ productId, onBack }) => {
       setProduct(found);
     }
   }, [productId, products]);
+
+  const submitReviewHandler = async () => {
+    if (!rating || !comment) {
+      showNotification('Please provide both rating and comment', 'error');
+      return;
+    }
+
+    setLoadingReview(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/products/${productId}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ rating, comment })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showNotification('Review submitted successfully');
+        setRating(5);
+        setComment('');
+        loadProducts(); 
+      } else {
+        showNotification(data.message || 'Failed to submit review', 'error');
+      }
+    } catch (error) {
+      console.error('Review error:', error);
+      showNotification('Error submitting review', 'error');
+    } finally {
+      setLoadingReview(false);
+    }
+  };
 
   if (!product) {
     return (
@@ -50,7 +89,7 @@ const ProductDetailsPage = ({ productId, onBack }) => {
           <GlassCard className="aspect-square relative overflow-hidden flex items-center justify-center p-4">
             {product.images?.[selectedImage] ? (
               <img 
-                src={product.images[selectedImage].startsWith('data:') ? product.images[selectedImage] : `http://localhost:5000${product.images[selectedImage]}`} 
+                src={product.images[selectedImage].startsWith('data:') ? product.images[selectedImage] : `${import.meta.env.VITE_SERVER_URL}${product.images[selectedImage]}`} 
                 alt={product.name}
                 className="max-h-full max-w-full object-contain hover:scale-110 transition-transform duration-500"
               />
@@ -74,7 +113,7 @@ const ProductDetailsPage = ({ productId, onBack }) => {
                 }`}
               >
                 <img 
-                  src={img.startsWith('data:') ? img : `http://localhost:5000${img}`} 
+                  src={img.startsWith('data:') ? img : `${import.meta.env.VITE_SERVER_URL}${img}`} 
                   alt="" 
                   className="w-full h-full object-cover" 
                 />
@@ -163,29 +202,73 @@ const ProductDetailsPage = ({ productId, onBack }) => {
       
       {/* Reviews Section Placeholder */}
       <GlassCard className="p-12 mb-16">
-        <h2 className="text-3xl font-bold text-white mb-8">Customer Reviews</h2>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
+          <h2 className="text-3xl font-bold text-white">Customer Reviews</h2>
+          {user && (
+            <div className="bg-white/5 p-6 rounded-2xl border border-white/10 flex-1 max-w-xl">
+              <h3 className="text-xl font-bold text-white mb-4">Write a Review</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <p className="text-white/70">Rating:</p>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setRating(star)}
+                        className="focus:outline-none transition-transform hover:scale-125"
+                      >
+                        <Star
+                          className={`w-6 h-6 ${
+                            star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <textarea
+                  placeholder="Share your experience with this product..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-pink-400 h-24 resize-none"
+                />
+                <Button 
+                  onClick={submitReviewHandler} 
+                  disabled={loadingReview}
+                  className="w-full py-3"
+                >
+                  {loadingReview ? 'Submitting...' : 'Submit Review'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="space-y-8">
            {product.reviews?.length > 0 ? product.reviews.map((rev, i) => (
              <div key={i} className="border-b border-white/10 pb-8 last:border-0 last:pb-0">
                 <div className="flex items-center gap-4 mb-3">
-                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white">
+                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white text-lg shadow-lg">
                       {rev.name.charAt(0)}
                    </div>
                    <div>
-                      <p className="text-white font-bold">{rev.name}</p>
-                      <div className="flex gap-1">
+                      <div className="flex items-center gap-3">
+                        <p className="text-white font-bold">{rev.name}</p>
+                        <span className="text-white/30 text-xs">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex gap-1 mt-1">
                          {[...Array(5)].map((_, j) => (
                             <Star key={j} className={`w-3 h-3 ${j < rev.rating ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`} />
                          ))}
                       </div>
                    </div>
                 </div>
-                <p className="text-white/70">{rev.comment}</p>
+                <p className="text-white/70 leading-relaxed pl-16">{rev.comment}</p>
              </div>
            )) : (
-             <div className="text-center py-8">
-                <Star className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                <p className="text-white/40">No reviews yet for this product.</p>
+             <div className="text-center py-12 bg-white/5 rounded-3xl border border-dashed border-white/10">
+                <Star className="w-16 h-16 text-white/5 mx-auto mb-4" />
+                <p className="text-white/40 text-lg font-medium">Be the first to review this product!</p>
              </div>
            )}
         </div>

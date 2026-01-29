@@ -64,7 +64,7 @@ const CheckoutPage = ({ onNavigate }) => {
         totalPrice: total
       };
 
-      const res = await fetch('http://localhost:5000/api/orders', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ const CheckoutPage = ({ onNavigate }) => {
   const verifyPayment = async (orderId, token, amount) => {
     try {
       const authToken = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/orders/${orderId}/pay/khalti`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/pay/khalti`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ const CheckoutPage = ({ onNavigate }) => {
         totalPrice: total
       };
 
-      const res = await fetch('http://localhost:5000/api/orders', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ const CheckoutPage = ({ onNavigate }) => {
         return;
       }
 
-      const orderId = data._id;
+      const orderId = data.order._id;
 
       const config = {
         publicKey: 'test_public_key_0275cc5e2bae42fb890536aae01e9e73',

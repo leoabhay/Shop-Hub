@@ -65,7 +65,7 @@ const AdminDashboard = () => {
       await loadProducts();
 
       // Load orders
-      const ordersRes = await fetch('http://localhost:5000/api/orders', {
+      const ordersRes = await fetch(`${import.meta.env.VITE_API_URL}/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!ordersRes.ok) {
@@ -75,7 +75,7 @@ const AdminDashboard = () => {
       setOrders(ordersData.orders || []);
 
       // Load users
-      const usersRes = await fetch('http://localhost:5000/api/users', {
+      const usersRes = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!usersRes.ok) {
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/products/${productId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/products/${productId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -146,7 +146,7 @@ const AdminDashboard = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}/status`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ const AdminDashboard = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/${orderId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -255,8 +255,8 @@ const AdminDashboard = () => {
       }
       
       const url = editingProduct 
-        ? `http://localhost:5000/api/products/${editingProduct._id}`
-        : 'http://localhost:5000/api/products';
+        ? `${import.meta.env.VITE_API_URL}/products/${editingProduct._id}`
+        : `${import.meta.env.VITE_API_URL}/products`;
       
       const method = editingProduct ? 'PUT' : 'POST';
       
@@ -355,7 +355,7 @@ const AdminDashboard = () => {
           { id: 'products', icon: Package, label: 'Products' },
           { id: 'orders', icon: ShoppingBag, label: 'Orders' },
           { id: 'users', icon: Users, label: 'Users' },
-          { id: 'profile', icon: User, label: 'My Profile' },
+          // { id: 'profile', icon: User, label: 'My Profile' },
           { id: 'settings', icon: Settings, label: 'Settings' }
         ].map(tab => (
           <button
@@ -390,11 +390,11 @@ const AdminDashboard = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-pink-400 font-bold">Rs. {order.totalPrice.toFixed(2)}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      order.status === 'Delivered' ? 'bg-green-500/20 text-green-400' :
-                      order.status === 'Shipped' ? 'bg-blue-500/20 text-blue-400' :
-                      order.status === 'Processing' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-gray-500/20 text-gray-400'
+                    <span className={`text-[10px] font-bold px-3 py-1 rounded-lg tracking-wider uppercase shadow-sm border ${
+                      order.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                      order.status === 'Shipped' ? 'bg-sky-500/20 text-sky-400 border-sky-500/30' :
+                      order.status === 'Processing' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                      'bg-white/10 text-white border-white/20'
                     }`}>
                       {order.status}
                     </span>
@@ -438,7 +438,7 @@ const AdminDashboard = () => {
                          <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center overflow-hidden">
                               {product.images?.[0] ? (
-                                <img src={product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5000${product.images[0]}`} alt="" className="w-full h-full object-cover" />
+                                <img src={product.images[0].startsWith('data:') ? product.images[0] : `${import.meta.env.VITE_SERVER_URL}${product.images[0]}`} alt="" className="w-full h-full object-cover" />
                               ) : (
                                 <Package className="w-5 h-5 text-red-400" />
                               )}
@@ -486,7 +486,7 @@ const AdminDashboard = () => {
                     <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center overflow-hidden">
                       {product.images && product.images[0] ? (
                         <img 
-                          src={product.images[0].startsWith('data:') ? product.images[0] : `http://localhost:5000${product.images[0]}`} 
+                          src={product.images[0].startsWith('data:') ? product.images[0] : `${import.meta.env.VITE_SERVER_URL}${product.images[0]}`} 
                           alt={product.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -543,17 +543,22 @@ const AdminDashboard = () => {
                         {new Date(order.createdAt).toLocaleString()}
                       </p>
                     </div>
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
-                      className="px-3 py-1 rounded-full text-sm bg-white/10 text-white border border-white/20 focus:outline-none focus:border-pink-400"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Processing">Processing</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleUpdateOrderStatus(order._id, e.target.value)}
+                        className="appearance-none pl-4 pr-10 py-2 rounded-xl text-sm bg-gradient-to-br from-white/10 to-white/5 text-white border border-white/20 focus:outline-none focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/10 transition-all cursor-pointer"
+                      >
+                        <option value="Pending" className="bg-slate-900">Pending</option>
+                        <option value="Processing" className="bg-slate-900">Processing</option>
+                        <option value="Shipped" className="bg-slate-900">Shipped</option>
+                        <option value="Delivered" className="bg-slate-900">Delivered</option>
+                        <option value="Cancelled" className="bg-slate-900">Cancelled</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/40">
+                         <svg className="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-white/60">{order.orderItems?.length || 0} items</span>

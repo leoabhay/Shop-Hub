@@ -44,14 +44,6 @@ const userSchema = new mongoose.Schema({
     enum: ['Male', 'Female', 'Other', 'Not Specified'],
     default: 'Not Specified'
   },
-  dob: {
-    type: Date
-  },
-  secondaryEmail: {
-    type: String,
-    lowercase: true,
-    trim: true
-  },
   role: {
     type: String,
     enum: ['user', 'admin'],

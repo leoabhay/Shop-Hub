@@ -16,6 +16,12 @@ export const AppProvider = ({ children }) => {
   const [notification, setNotification] = useState(null);
   const [currentPage, setCurrentPage] = useState('home');
   const [viewingItemId, setViewingItemId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const filterByCategory = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage('products');
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -35,11 +41,22 @@ export const AppProvider = ({ children }) => {
   const loadUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const cartRes = await fetch('http://localhost:5000/api/users/cart', {
+      // Load cart
+      const cartRes = await fetch(`${import.meta.env.VITE_API_URL}/users/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const cartData = await cartRes.json();
       setCart(cartData.cart || []);
+
+      // Load full user profile
+      const userRes = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const userData = await userRes.json();
+      if (userRes.ok && userData.user) {
+        setUser(userData.user);
+        localStorage.setItem('user', JSON.stringify(userData.user));
+      }
     } catch (error) {
       console.error('Error loading user data:', error);
     }
@@ -48,8 +65,8 @@ export const AppProvider = ({ children }) => {
   const loadProducts = async (keyword = '') => {
     try {
       const url = keyword 
-        ? `http://localhost:5000/api/products?keyword=${encodeURIComponent(keyword)}`
-        : 'http://localhost:5000/api/products';
+        ? `${import.meta.env.VITE_API_URL}/products?keyword=${encodeURIComponent(keyword)}`
+        : `${import.meta.env.VITE_API_URL}/products`;
       const res = await fetch(url);
       const data = await res.json();
       setProducts(data.products || []);
@@ -110,17 +127,15 @@ export const AppProvider = ({ children }) => {
   const updateProfile = async (profileData) => {
     try {
       const token = localStorage.getItem('token');
-      const { name, phone, street, city, state, zipCode, country, gender, dob, secondaryEmail } = profileData;
+      const { name, phone, street, city, state, zipCode, country, gender } = profileData;
       const formattedData = {
         name,
         phone,
         gender,
-        dob,
-        secondaryEmail,
         address: { street, city, state, zipCode, country }
       };
 
-      const res = await fetch('http://localhost:5000/api/auth/profile', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +164,8 @@ export const AppProvider = ({ children }) => {
       user, cart, wishlist, products, notification, currentPage,
       login, logout, addToCart, removeFromCart, updateCartQuantity,
       showNotification, loadProducts, setCurrentPage, updateProfile,
-      viewingItemId, setViewingItemId, setCart
+      viewingItemId, setViewingItemId, setCart,
+      selectedCategory, setSelectedCategory, filterByCategory
     }}>
       {children}
     </AppContext.Provider>

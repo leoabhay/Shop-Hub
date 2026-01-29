@@ -10,9 +10,7 @@ const generateToken = (id) => {
   });
 };
 
-// @desc    Register user
-// @route   POST /api/auth/register
-// @access  Public
+// Register new user
 exports.register = async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -47,6 +45,8 @@ exports.register = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          phone: user.phone,
+          address: user.address,
           role: user.role
         }
       });
@@ -61,9 +61,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// @desc    Verify email
-// @route   GET /api/auth/verify/:token
-// @access  Public
+// Verify email
 exports.verifyEmail = async (req, res) => {
   try {
     const hashedToken = crypto
@@ -98,6 +96,8 @@ exports.verifyEmail = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
+        address: user.address,
         role: user.role,
         isVerified: user.isVerified
       }
@@ -110,9 +110,7 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
-// @access  Public
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -139,6 +137,8 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
+        address: user.address,
         role: user.role,
         isVerified: user.isVerified
       }
@@ -148,9 +148,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// @desc    Get current user
-// @route   GET /api/auth/me
-// @access  Private
+// Get current user
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate('cart.product wishlist');
@@ -160,12 +158,10 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// @desc    Update user profile
-// @route   PUT /api/auth/profile
-// @access  Private
+// Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, phone, address, gender, dob, secondaryEmail } = req.body;
+    const { name, phone, address, gender } = req.body;
     
     const user = await User.findById(req.user.id);
     
@@ -173,8 +169,6 @@ exports.updateProfile = async (req, res) => {
     if (phone) user.phone = phone;
     if (address) user.address = address;
     if (gender) user.gender = gender;
-    if (dob) user.dob = dob;
-    if (secondaryEmail) user.secondaryEmail = secondaryEmail;
     
     await user.save();
     
@@ -187,8 +181,6 @@ exports.updateProfile = async (req, res) => {
         phone: user.phone,
         address: user.address,
         gender: user.gender,
-        dob: user.dob,
-        secondaryEmail: user.secondaryEmail,
         createdAt: user.createdAt
       }
     });

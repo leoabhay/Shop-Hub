@@ -4,19 +4,20 @@ import { useApp } from '../context/AppContext';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 
+let globalVerificationStarted = false;
+
 const VerifyEmailPage = ({ token, onNavigate }) => {
   const { showNotification } = useApp();
   const [status, setStatus] = useState('loading'); // loading, success, error
   const [message, setMessage] = useState('');
-  const verificationStarted = React.useRef(false);
 
   useEffect(() => {
     const verifyEmail = async () => {
-      if (verificationStarted.current) return;
-      verificationStarted.current = true;
+      if (globalVerificationStarted) return;
+      globalVerificationStarted = true;
       
       try {
-        const res = await fetch(`http://localhost:5000/api/auth/verify/${token}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/verify/${token}`);
         const data = await res.json();
 
         if (res.ok && data.success) {
@@ -27,7 +28,7 @@ const VerifyEmailPage = ({ token, onNavigate }) => {
           
           // Redirect to login after 3 seconds
           setTimeout(() => {
-            window.history.pushState({}, '', '/'); // Clear the URL
+            window.history.pushState({}, '', ''); // Clear the URL
             onNavigate('login');
           }, 3000);
         } else {

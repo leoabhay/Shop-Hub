@@ -16,15 +16,13 @@ const ProfilePage = () => {
     state: user?.address?.state || '',
     zipCode: user?.address?.zipCode || '',
     country: user?.address?.country || 'Nepal',
-    gender: user?.gender || 'Not Specified',
-    dob: user?.dob ? new Date(user.dob).toISOString().split('T')[0] : '',
-    secondaryEmail: user?.secondaryEmail || ''
+    gender: user?.gender || 'Not Specified'
   });
 
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/orders/myorders', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/myorders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -46,9 +44,7 @@ const ProfilePage = () => {
         state: user.address?.state || '',
         zipCode: user.address?.zipCode || '',
         country: user.address?.country || 'Nepal',
-        gender: user.gender || 'Not Specified',
-        dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : '',
-        secondaryEmail: user.secondaryEmail || ''
+        gender: user.gender || 'Not Specified'
       });
       fetchOrders();
     }
@@ -158,48 +154,26 @@ const ProfilePage = () => {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-white/70 ml-1">Alternative Contact Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                    <input
-                      type="email"
-                      value={formData.secondaryEmail}
-                      onChange={(e) => setFormData({ ...formData, secondaryEmail: e.target.value })}
-                      className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-pink-500 focus:bg-white/10 transition-all"
-                      placeholder="Alternative email (gmail/email)"
-                    />
-                  </div>
-                </div>
               </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/70 ml-1">Gender</label>
-                    <div className="relative">
-                      <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <label className="text-sm font-medium text-white/70 ml-1">Gender Identity</label>
+                    <div className="relative group">
+                      <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-pink-400 group-focus-within:text-pink-300 transition-colors z-10" />
                       <select
                         value={formData.gender}
                         onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-pink-500 focus:bg-white/10 transition-all appearance-none"
+                        className="w-full pl-12 pr-10 py-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/20 text-white focus:outline-none focus:border-pink-500/50 focus:ring-4 focus:ring-pink-500/10 transition-all appearance-none cursor-pointer hover:bg-white/15"
                       >
-                        <option value="Not Specified">Not Specified</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="Not Specified" className="bg-slate-900">Not Specified</option>
+                        <option value="Male" className="bg-slate-900">Male</option>
+                        <option value="Female" className="bg-slate-900">Female</option>
+                        <option value="Other" className="bg-slate-900">Other</option>
                       </select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white/70 ml-1">Date of Birth</label>
-                    <div className="relative">
-                      <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-                      <input
-                        type="date"
-                        value={formData.dob}
-                        onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-pink-500 focus:bg-white/10 transition-all"
-                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/40">
+                         <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                      </div>
                     </div>
                   </div>
                 </div>

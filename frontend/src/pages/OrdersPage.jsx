@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Package } from 'lucide-react';
+import { Eye, X, Package } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
@@ -19,7 +19,7 @@ const OrdersPage = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/orders/myorders', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/orders/myorders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -65,13 +65,13 @@ const OrdersPage = () => {
                   <h3 className="text-2xl font-bold text-white mb-2">Order #{order._id.slice(-6)}</h3>
                   <p className="text-white/60">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
                 </div>
-                <span className={`px-4 py-2 rounded-full font-semibold ${
-                  order.status === 'Delivered' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                  order.status === 'Processing' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                  order.status === 'Shipped' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                  'bg-white/10 text-white border border-white/20'
+                <span className={`px-5 py-2 rounded-xl font-bold text-sm tracking-wide shadow-lg backdrop-blur-md border ${
+                  order.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                  order.status === 'Processing' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                  order.status === 'Shipped' ? 'bg-sky-500/20 text-sky-400 border-sky-500/30' :
+                  'bg-white/10 text-white border-white/20'
                 }`}>
-                  {order.status}
+                  {order.status.toUpperCase()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -103,7 +103,7 @@ const OrdersPage = () => {
               onClick={() => setSelectedOrder(null)}
               className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"
             >
-              <Eye className="w-6 h-6 rotate-45" />
+              <X className="w-6 h-6 rotate-45" />
             </button>
 
             <h2 className="text-3xl font-bold text-white mb-2">Order Details</h2>

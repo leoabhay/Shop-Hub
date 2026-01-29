@@ -39,7 +39,7 @@ const CartPage = ({ onNavigate }) => {
                 <div className="w-24 h-24 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {item.product.images && item.product.images[0] ? (
                     <img 
-                      src={item.product.images[0].startsWith('data:') ? item.product.images[0] : `http://localhost:5000${item.product.images[0]}`} 
+                      src={item.product.images[0].startsWith('data:') ? item.product.images[0] : `${import.meta.env.VITE_SERVER_URL}${item.product.images[0]}`} 
                       alt={item.product.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
